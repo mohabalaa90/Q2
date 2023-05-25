@@ -1,0 +1,40 @@
+pipeline{
+  agent any
+  tools{
+    maven 'maven'
+  }
+  stages{
+    stage('build jar'){
+      steps{
+        script{
+           echo "building jar file............... "
+           sh 'mvn clean'
+           sh 'mvn package'
+        }
+      }
+    }
+    stage('clear old images'){
+      steps{
+        script{
+            echo "clearing Old Images ..............."
+             sh '''if docker images -a  | grep "registry.tools*" | awk \'{print $3}\' | xargs docker rmi -f ;
+                 then 
+                   printf "clearing succsseded"
+                 else 
+                   printf "no images to clear"
+                  fi'''
+        }
+      }
+    }
+    stage('build image'){
+      steps{
+         script{
+                 echo "building image..............."
+                 sh 'docker login "https://registry.tools.idp.qeema.io"  -u mashour -p 9#5#kgrxd3mmUA'
+                 sh "docker build -t registry.tools.idp.qeema.io/qeema_test:$BUILD_NUMBER ."
+                // sh "docker push registry.tools.idp.qeema.io/qeema_test:$BUILD_NUMBER"
+         }
+       }
+    }
+  }
+}
